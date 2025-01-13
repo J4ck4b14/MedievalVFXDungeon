@@ -4,43 +4,63 @@ using UnityEngine;
 public class ToxicBehavior : MonoBehaviour
 {
     public float size = 0;
-    public float speed = 1;
-    public float timeToDecrease = 5f;
-    public float decreaseTime = 0.5f;
+    public float speed = 0.1f;
+    [Tooltip("This variable sets the time until it starts shrinking.")]
+    public float timeUntilShrinkingStarts = 2f;
+    [Tooltip("This variable sets the time between each coroutine iteration")]
+    public float coroutineTime = 0.05f;
 
-    
+    private Coroutine goShortyCoroutine;
 
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
-    void Start()
+    void GoShorty()
     {
-        InvokeRepeating("GoShorty", 1f, 0.5f);
-        Invoke("KillIt", timeToDecrease);
+        size += 0.1f;
+        transform.localScale = new Vector3(size, size, size);
+        transform.localPosition += Vector3.forward * speed;
     }
 
-    IEnumerator GoShorty()
+    IEnumerator GoShortyRepeating()
     {
-        size++;
-        gameObject.transform.localScale = new Vector3(size*0.1f, size*0.1f);
-        gameObject.transform.position = Vector3.forward * speed;
-        Debug.Log("Funciono");
-        yield return null;
+        while (true)
+        {
+            yield return new WaitForSeconds(coroutineTime);
+            GoShorty();
+        }
     }
 
+    /// <summary>
+    /// KillIt() makes the target smaller until its scale's magnitude is smaller than 0.866 (Vector3.one * 0.5f)
+    /// E.g.: (0.45, 0.5, 0.55) > (0.5, 0.5, 0.5) -> The target would get smaller again
+    /// </summary>
     IEnumerator KillIt()
     {
-        if (size > 1)
+        if (transform.localScale.magnitude > new Vector3(0.5f, 0.5f, 0.5f).magnitude)
         {
-            StopCoroutine("GoShorty");
-            size -= .1f;
-            gameObject.transform.position = Vector3.forward * speed;
-            Invoke("KillIt", decreaseTime);
-            yield return null;
+            if (goShortyCoroutine != null)
+            {
+                StopCoroutine(goShortyCoroutine);
+            }
+
+            while (size > 0.5f)
+            {
+                size -= 0.1f;
+                transform.localScale = new Vector3(size, size, size);
+                transform.localPosition += Vector3.forward * speed;
+                yield return new WaitForSeconds(coroutineTime);
+            }
         }
-        else
-        {
-            StopAllCoroutines();
-            Object.DestroyImmediate(gameObject);
-            yield return null;
-        }
+
+        Destroy(gameObject);
+    }
+
+    void StartKillIt()
+    {
+        StartCoroutine(KillIt());
+    }
+
+    void Start()
+    {
+        goShortyCoroutine = StartCoroutine(GoShortyRepeating());
+        Invoke("StartKillIt", timeUntilShrinkingStarts);
     }
 }
