@@ -47,7 +47,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   size: 0
   speed: 0.25
-  timeUntilShrinkingStarts: 5
+  timeUntilShrinkingStarts: 3
   coroutineTime: 0.05
 --- !u!1 &6098633886343440033
 GameObject:
